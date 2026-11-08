@@ -16,22 +16,11 @@
             --white: #ffffff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* Fixed height collapse for Android WebView / MacroDroid */
-        html, body { 
-            width: 100vw; 
-            height: 100vh; 
-            height: 100dvh; 
-            min-height: 520px;
-            background: var(--bg-gradient); 
-            color: var(--text-dark); 
-            overflow: hidden; 
-            position: relative;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; background: var(--bg-gradient); color: var(--text-dark); overflow: hidden; }
 
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
-        .falling-item { position: absolute; top: -50px; font-size: 24px; animation: fall linear forwards; opacity: 0.3; will-change: transform; }
+        .falling-item { position: absolute; top: -50px; font-size: 24px; animation: fall linear infinite; opacity: 0.3; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
 
         .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 10; }
@@ -60,7 +49,6 @@
         .inp {
             width: 100%; padding: 18px; border: 2px solid #f5f5f5; border-radius: 20px;
             background: #fafafa; color: var(--text-dark); font-size: 1rem; font-weight: 700; outline: none;
-            user-select: text; -webkit-user-select: text;
         }
         .inp:focus { border-color: var(--primary); background: #fff; }
         .toggle-pwd { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; }
@@ -77,7 +65,7 @@
         .pill { background: white; padding: 10px 18px; border-radius: 50px; font-weight: 900; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
         .game-board { position: relative; width: 100%; max-width: 320px; height: 180px; margin: 25px 0; }
-        .pot { position: absolute; bottom: 0; width: 85px; height: 105px; cursor: pointer; z-index: 5; transition: left 0.55s cubic-bezier(0.45, 0.05, 0.55, 0.95), transform 0.3s; will-change: left, transform; }
+        .pot { position: absolute; bottom: 0; width: 85px; height: 105px; cursor: pointer; z-index: 5; transition: left 0.55s cubic-bezier(0.45, 0.05, 0.55, 0.95), transform 0.3s; }
         .pot-body { width: 100%; height: 100%; background: linear-gradient(145deg, #ffca28, #f57c00); border-radius: 15px 15px 40px 40px; border-bottom: 6px solid #bf360c; position: relative; }
         .pot-label { position: absolute; bottom: 12px; width: 100%; text-align: center; font-size: 8px; font-weight: 900; color: rgba(255,255,255,0.6); letter-spacing: 0.5px; }
         .pot.lifted { transform: translateY(-80px) rotate(-5deg); }
@@ -94,6 +82,7 @@
         .player-score { font-weight: 900; color: var(--primary-dark); font-size: 1.4rem; }
 
         .status { font-size: 1.6rem; font-weight: 900; color: var(--accent); margin-bottom: 15px; text-align: center; min-height: 45px; }
+
     </style>
 </head>
 <body>
@@ -110,17 +99,17 @@
                     <p>Enter a unique username to register and play. Make sure you remember your details.</p>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="inp-handle" class="inp" placeholder="Username" maxlength="12" autocomplete="off">
+                    <input type="text" id="inp-handle" class="inp" placeholder="Username" maxlength="12">
                 </div>
                 <div class="input-group">
-                    <input type="password" id="inp-pwd" class="inp" placeholder="Password" autocomplete="off">
+                    <input type="password" id="inp-pwd" class="inp" placeholder="Password">
                     <span class="toggle-pwd" id="btn-toggle">👁️</span>
                 </div>
                 <p id="login-msg" style="color:red; font-size:0.8rem; font-weight:bold; margin-bottom:15px; height:15px;"></p>
-                <button class="btn" id="btn-login">Join Game</button>
+                <button class="btn" id="btn-login" type="button">Join Game</button>
                 <div style="margin-top:25px; padding:5px; font-size:12px; background-color:#f5f5f5; border-radius:6px;">
-                    If you are facing any error or forgotten your details then contact "unskyit@gmail.com".
-                </div>
+                 If you are facing any error or forgotten your details then contact "unskyit@gmail.com".
+</div>
             </div>
             <div class="spacer"></div>
         </div>
@@ -136,14 +125,14 @@
             <div class="status" id="game-status">Ready?</div>
             <div class="game-board" id="table"></div>
             <div class="spacer"></div>
-            <button class="btn" id="btn-action" style="max-width: 280px;">Shuffle Pots</button>
+            <button class="btn" id="btn-action" type="button" style="max-width: 280px;">Shuffle Pots</button>
             <div class="spacer"></div>
         </div>
     </div>
 
     <div id="view-lb" class="screen is-hidden" style="background: #fffbf2;">
         <div class="lb-header">
-            <button class="btn-close-x" id="btn-hide-lb-top">✕</button>
+            <button class="btn-close-x" id="btn-hide-lb-top" type="button">✕</button>
             <h2 style="font-weight: 900; font-size: 1.8rem;">LEADERBOARD</h2>
         </div>
         <div class="lb-scroll-container">
@@ -151,20 +140,10 @@
         </div>
     </div>
 
-    <!-- Using Compat SDKs prevents ES6 Module CORS crashes inside local Android WebViews -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <script>
-        // Prevent unhandled errors from crashing the MacroDroid WebView
-        window.onerror = function(msg) {
-            const el = document.getElementById('login-msg');
-            if (el && !document.getElementById('view-login').classList.contains('is-hidden')) {
-                el.innerText = "Connection Notice: Check network.";
-            }
-            return true;
-        };
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeAuth, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { initializeFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC26LXwQc5EnEkRIjKQi4d2SzJRKNemGm4",
@@ -174,40 +153,31 @@
             messagingSenderId: "858055132182",
             appId: "1:858055132182:web:92bad25ddcb8f852e2e137"
         };
+        const app = initializeApp(firebaseConfig);
+        // Fixes MacroDroid WebView IndexedDB & WebChannel login freeze
+        const auth = initializeAuth(app, { persistence: inMemoryPersistence });
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const state = { score: 0, isPlaying: false, winId: 0, handle: "", cups: [] };
+        const POSITIONS = ['10px', '115px', '220px']; 
 
-        // Safe persistence fallback for embedded Android WebViews (avoids IndexedDB crash)
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {
-            return auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-        });
-
-        const state = { score: 0, bestScore: 0, isPlaying: false, waiting: false, winId: 0, handle: "", cups: [] };
-        const POSITIONS = ['10px', '115px', '220px'];
-
-        // --- CALM AUDIO ENGINE (Hardened for WebView) ---
+        // --- CALM AUDIO ENGINE ---
         let audioCtx = null;
+        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
         function playTone(freq, duration, type = 'sine', vol = 0.05) {
-            try {
-                if (!audioCtx) {
-                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioContextClass) return;
-                    audioCtx = new AudioContextClass();
-                }
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) { /* Ignore audio errors in restricted WebViews */ }
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
         }
 
         const sounds = {
@@ -217,7 +187,7 @@
             fail: () => playTone(110, 0.5, 'sawtooth', 0.04)
         };
 
-        // --- UI & MEMORY-SAFE FALLING ITEMS ---
+        // --- UI ---
         document.getElementById('btn-toggle').onclick = () => {
             sounds.click();
             const inp = document.getElementById('inp-pwd');
@@ -225,17 +195,14 @@
             document.getElementById('btn-toggle').innerText = inp.type === 'password' ? '👁️' : '🙈';
         };
 
-        const bgCanvas = document.getElementById('bg-canvas');
         setInterval(() => {
-            if (document.hidden || bgCanvas.childElementCount > 6) return;
             const el = document.createElement('div');
             el.className = 'falling-item';
             el.innerText = Math.random() > 0.5 ? '🍯' : '🧸';
-            el.style.left = Math.random() * 92 + 'vw';
-            const dur = (Math.random() * 3 + 4);
-            el.style.animationDuration = dur + 's';
-            bgCanvas.appendChild(el);
-            setTimeout(() => { if (el.parentNode) el.remove(); }, dur * 1000);
+            el.style.left = Math.random() * 95 + 'vw';
+            el.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            document.getElementById('bg-canvas').appendChild(el);
+            setTimeout(() => el.remove(), 7000);
         }, 2000);
 
         // --- AUTH ---
@@ -244,42 +211,31 @@
             const h = document.getElementById('inp-handle').value.trim();
             const p = document.getElementById('inp-pwd').value;
             const msg = document.getElementById('login-msg');
-            const cleanHandle = h.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-            if (!cleanHandle || !p) { msg.innerText = "Check details!"; return; }
-            if (p.length < 6) { msg.innerText = "Password needs 6+ chars!"; return; }
-
-            msg.style.color = "#ff6f00";
+            if(!h || !p) { msg.innerText = "Check details!"; return; }
             msg.innerText = "Connecting...";
-            const email = `${cleanHandle}@teddy.game`;
-
+            state.handle = h;
+            const email = `${h.toLowerCase().replace(/[^a-z0-9]/g,'')}@teddy.game`;
             try {
-                await auth.signInWithEmailAndPassword(email, p);
-            } catch (e) {
+                await signInWithEmailAndPassword(auth, email, p);
+            } catch(e) {
                 try {
-                    const c = await auth.createUserWithEmailAndPassword(email, p);
-                    await db.collection("users").doc(c.user.uid).set({ handle: h, bestScore: 0 });
-                    await db.collection("leaderboard").doc(c.user.uid).set({ handle: h, score: 0 });
-                } catch (err) {
-                    msg.style.color = "red";
-                    msg.innerText = "Wrong password or Name Taken.";
-                }
+                    const c = await createUserWithEmailAndPassword(auth, email, p);
+                    setDoc(doc(db, "users", c.user.uid), { handle: h, bestScore: 0 }).catch(()=>{});
+                    setDoc(doc(db, "leaderboard", c.user.uid), { handle: h, score: 0 }).catch(()=>{});
+                } catch(err) { msg.innerText = "Error or Name Taken."; }
             }
         };
 
-        auth.onAuthStateChanged(async (u) => {
-            if (u) {
+        onAuthStateChanged(auth, async (u) => {
+            if(u) {
                 document.getElementById('view-login').classList.add('is-hidden');
                 document.getElementById('view-game').classList.remove('is-hidden');
-                try {
-                    const d = await db.collection("users").doc(u.uid).get();
-                    if (d.exists) {
-                        state.handle = d.data().handle || "Player";
-                        state.bestScore = d.data().bestScore || 0;
-                    }
-                } catch (e) {}
                 state.score = 0;
                 initBoard();
+                try {
+                    const d = await getDoc(doc(db, "users", u.uid));
+                    if(d.exists()) { state.handle = d.data().handle; }
+                } catch(e) {}
             }
         });
 
@@ -287,7 +243,7 @@
             const table = document.getElementById('table');
             table.innerHTML = '<div class="honey" id="coin" style="opacity:0"></div>';
             state.cups = [];
-            for (let i = 0; i < 3; i++) {
+            for(let i=0; i<3; i++) {
                 const c = document.createElement('div');
                 c.className = 'pot';
                 c.style.left = POSITIONS[i];
@@ -299,14 +255,14 @@
         }
 
         document.getElementById('btn-action').onclick = async () => {
-            if (state.isPlaying || state.waiting) return;
+            if(state.isPlaying) return;
             sounds.click();
             state.isPlaying = true;
-            state.winId = Math.floor(Math.random() * 3);
+            state.winId = Math.floor(Math.random()*3);
             const winCup = state.cups.find(c => c.id === state.winId);
             const coin = document.getElementById('coin');
             const status = document.getElementById('game-status');
-
+            
             status.innerText = "Watch!";
             coin.style.left = `calc(${POSITIONS[winCup.posIndex]} + 24px)`;
             coin.style.opacity = 1;
@@ -318,21 +274,14 @@
 
             status.innerText = "Shuffling...";
             let count = 6 + Math.min(state.score, 10);
-            for (let k = 0; k < count; k++) {
+            for(let k=0; k<count; k++) {
                 sounds.shuffle();
-                let p1 = Math.floor(Math.random() * 3), p2 = Math.floor(Math.random() * 3);
-                while (p1 === p2) p2 = Math.floor(Math.random() * 3);
+                let p1 = Math.floor(Math.random()*3), p2 = Math.floor(Math.random()*3);
+                while(p1===p2) p2 = Math.floor(Math.random()*3);
                 let c1 = state.cups.find(c => c.posIndex === p1), c2 = state.cups.find(c => c.posIndex === p2);
-
-                const speed = Math.max(0.28, (550 - Math.min(state.score * 15, 250)) / 1000);
-                c1.el.style.transition = `left ${speed}s cubic-bezier(0.45, 0.05, 0.55, 0.95), transform 0.3s`;
-                c2.el.style.transition = `left ${speed}s cubic-bezier(0.45, 0.05, 0.55, 0.95), transform 0.3s`;
-
-                c1.el.style.left = POSITIONS[p2];
-                c2.el.style.left = POSITIONS[p1];
-                c1.posIndex = p2;
-                c2.posIndex = p1;
-                await new Promise(r => setTimeout(r, speed * 1000));
+                c1.el.style.left = POSITIONS[p2]; c2.el.style.left = POSITIONS[p1];
+                c1.posIndex = p2; c2.posIndex = p1;
+                await new Promise(r => setTimeout(r, 550 - Math.min(state.score * 15, 250)));
             }
             status.innerText = "Where is it?";
             state.isPlaying = false;
@@ -340,34 +289,24 @@
         };
 
         async function checkGuess(id) {
-            if (state.isPlaying || !state.waiting) return;
+            if(state.isPlaying || !state.waiting) return;
             state.waiting = false;
-            state.isPlaying = true;
-
             const coin = document.getElementById('coin');
             const winCup = state.cups.find(c => c.id === state.winId);
             const clicked = state.cups.find(c => c.id === id);
-
+            
             coin.style.left = `calc(${POSITIONS[winCup.posIndex]} + 24px)`;
             clicked.el.classList.add('lifted');
 
-            if (id === state.winId) {
+            if(id === state.winId) {
                 sounds.win();
                 document.getElementById('game-status').innerText = "Found! 🍯";
                 coin.style.opacity = 1;
                 state.score++;
                 document.getElementById('txt-score').innerText = state.score;
-
-                // Only update Firestore if the user beats their personal best
-                if (state.score > state.bestScore && auth.currentUser) {
-                    state.bestScore = state.score;
-                    db.collection("users").doc(auth.currentUser.uid).set({ handle: state.handle, bestScore: state.bestScore }, { merge: true });
-                    db.collection("leaderboard").doc(auth.currentUser.uid).set({ handle: state.handle, score: state.bestScore }, { merge: true });
-                }
-
+                setDoc(doc(db, "leaderboard", auth.currentUser.uid), { handle: state.handle, score: state.score }, {merge: true}).catch(()=>{});
                 await new Promise(r => setTimeout(r, 1200));
                 clicked.el.classList.remove('lifted');
-                state.isPlaying = false;
                 document.getElementById('btn-action').click();
             } else {
                 sounds.fail();
@@ -379,16 +318,15 @@
                 document.getElementById('txt-score').innerText = 0;
                 await new Promise(r => setTimeout(r, 2000));
                 initBoard();
-                state.isPlaying = false;
                 document.getElementById('game-status').innerText = "Try Again?";
             }
         }
 
         function getTitle(s) {
-            if (s >= 50) return "<br><p style='font-size:11px;'>Legendary 🔥</p>";
-            if (s >= 25) return "<br><p style='font-size:11px;'>Elite ⚡</p>";
-            if (s >= 15) return "<br><p style='font-size:11px;'>Master 🏆</p>";
-            if (s >= 5) return "<br><p style='font-size:11px;'>Pro ⭐</p>";
+            if(s >= 50) return "<br><p style='font-size:11px;'>Legendary 🔥</p>";
+            if(s >= 25) return "<br><p style='font-size:11px;'>Elite ⚡</p>";
+            if(s >= 15) return "<br><p style='font-size:11px;'>Master 🏆</p>";
+            if(s >= 5) return "<br><p style='font-size:11px;'>Pro ⭐</p>"; 
             return "<br><p style='font-size:11px;'>Rookie 🌱</p>";
         }
 
@@ -399,7 +337,8 @@
             const list = document.getElementById('lb-list');
             list.innerHTML = "<p style='text-align:center; padding:20px;'>Syncing...</p>";
             try {
-                const snap = await db.collection("leaderboard").orderBy("score", "desc").limit(40).get();
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(40));
+                const snap = await getDocs(q);
                 let html = ""; let i = 1;
                 snap.forEach(d => {
                     const v = d.data();
@@ -408,7 +347,7 @@
                     i++;
                 });
                 list.innerHTML = html || "Empty Arena.";
-            } catch (e) { list.innerHTML = "Sync Error."; }
+            } catch(e) { list.innerHTML = "Sync Error."; }
         };
 
         document.getElementById('btn-hide-lb-top').onclick = () => {
@@ -416,6 +355,7 @@
             document.getElementById('view-lb').classList.add('is-hidden');
             document.getElementById('view-game').classList.remove('is-hidden');
         };
+
     </script>
 </body>
 </html>
