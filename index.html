@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Teddy Shuffle: Arena</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
-
         :root {
             --bg-gradient: linear-gradient(135deg, #fdfbf7 0%, #fff0d4 100%);
             --text-dark: #5d4037;
@@ -16,8 +14,8 @@
             --white: #ffffff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
-        html, body { width: 100%; height: 100%; background: var(--bg-gradient); color: var(--text-dark); overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; font-family: 'Nunito', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; background: #fff0d4; background: var(--bg-gradient); color: var(--text-dark); overflow: hidden; position: fixed; top: 0; left: 0; }
 
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
         .falling-item { position: absolute; top: -50px; font-size: 24px; animation: fall linear infinite; opacity: 0.3; }
@@ -28,32 +26,6 @@
         .scroll-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; -webkit-overflow-scrolling: touch; }
         .spacer { flex: 1; min-height: 20px; }
 
-        /* --- CLEAN ARENA LOGIN --- */
-        .card {
-            background: var(--white); border-radius: 35px;
-            box-shadow: 0 20px 45px rgba(93, 64, 55, 0.15);
-            padding: 40px 25px; width: 100%; max-width: 340px;
-            text-align: center; margin: auto; position: relative;
-            border: 4px solid var(--white);
-        }
-        .arena-badge { 
-            display: inline-block; background: #fff3e0; color: var(--accent);
-            padding: 6px 16px; border-radius: 50px; font-weight: 900; font-size: 0.75rem;
-            letter-spacing: 1px; margin-bottom: 15px;
-        }
-
-        .title-group h1 { font-size: 2rem; font-weight: 900; margin-bottom: 5px; color: var(--text-dark); }
-        .title-group p { font-size: 0.9rem; font-weight: 700; color: #8d6e63; margin-bottom: 25px; }
-
-        .input-group { position: relative; width: 100%; margin-bottom: 15px; }
-        .inp {
-            width: 100%; padding: 18px; border: 2px solid #f5f5f5; border-radius: 20px;
-            background: #fafafa; color: var(--text-dark); font-size: 1rem; font-weight: 700; outline: none;
-            user-select: text; -webkit-user-select: text;
-        }
-        .inp:focus { border-color: var(--primary); background: #fff; }
-        .toggle-pwd { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; padding: 5px; }
-
         .btn {
             width: 100%; padding: 18px; border: none; border-radius: 22px;
             background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: 900;
@@ -62,8 +34,8 @@
         .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--primary-dark); }
 
         /* --- GAME UI --- */
-        .hud { width: 100%; max-width: 340px; display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .pill { background: white; padding: 10px 18px; border-radius: 50px; font-weight: 900; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .hud { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .pill { background: white; padding: 10px 15px; border-radius: 50px; font-weight: 900; font-size: 0.92rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); white-space: nowrap; }
 
         .game-board { position: relative; width: 100%; max-width: 320px; height: 180px; margin: 25px 0; }
         .pot { position: absolute; bottom: 0; width: 85px; height: 105px; cursor: pointer; z-index: 5; transition: left 0.55s cubic-bezier(0.45, 0.05, 0.55, 0.95), transform 0.3s; }
@@ -72,55 +44,31 @@
         .pot.lifted { transform: translateY(-80px) rotate(-5deg); }
         .honey { position: absolute; bottom: 20px; width: 35px; height: 35px; background: radial-gradient(circle at 30% 30%, #ffd740, #ff8f00); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #ffb300; z-index: 2; }
 
-        /* --- LEADERBOARD --- */
-        .lb-header { width: 100%; background: var(--primary); color: white; padding: 55px 20px 25px; text-align: center; border-radius: 0 0 35px 35px; position: relative; }
+        /* --- HISTORY / HIGH SCORE VIEW (Exact Leaderboard Theme) --- */
+        .lb-header { width: 100%; background: var(--primary); color: white; padding: 45px 20px 22px; text-align: center; border-radius: 0 0 35px 35px; position: relative; }
         .btn-close-x { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-weight: 900; cursor: pointer; }
         .lb-scroll-container { flex: 1; overflow-y: scroll; width: 100%; display: flex; flex-direction: column; align-items: center; padding-bottom: 30px; -webkit-overflow-scrolling: touch; }
-        .lb-content { width: 100%; max-width: 360px; padding: 25px 20px; }
-        .lb-row { display: flex; align-items: center; background: white; padding: 18px; border-radius: 22px; margin-bottom: 12px; border: 1px solid #f0f0f0; }
-        .rank-circle { width: 38px; height: 38px; background: #fff8e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 15px; border: 1px solid var(--primary); }
+        .lb-content { width: 100%; max-width: 360px; padding: 20px; }
+        .lb-row { display: flex; align-items: center; background: white; padding: 16px 18px; border-radius: 22px; margin-bottom: 12px; border: 1px solid #f0f0f0; }
+        .rank-circle { width: 38px; height: 38px; background: #fff8e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 15px; border: 1px solid var(--primary); font-size: 0.85rem; }
         .player-box { flex: 1; }
+        .player-name { font-weight: 900; font-size: 0.95rem; color: var(--text-dark); }
         .player-score { font-weight: 900; color: var(--primary-dark); font-size: 1.4rem; }
 
         .status { font-size: 1.6rem; font-weight: 900; color: var(--accent); margin-bottom: 15px; text-align: center; min-height: 45px; }
-
     </style>
 </head>
 <body>
 
     <div id="bg-canvas"></div>
 
-    <div id="view-login" class="screen">
-        <div class="scroll-area">
-            <div class="spacer"></div>
-            <div class="card">
-                <div class="arena-badge">Welcome To Honey Arena</div>
-                <div class="title-group">
-                    <h1>Teddy Shuffle 🍯</h1>
-                    <p>Enter a unique username to register and play. Make sure you remember your details.</p>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="inp-handle" class="inp" placeholder="Username" maxlength="12">
-                </div>
-                <div class="input-group">
-                    <input type="password" id="inp-pwd" class="inp" placeholder="Password">
-                    <span class="toggle-pwd" id="btn-toggle">👁️</span>
-                </div>
-                <p id="login-msg" style="color:red; font-size:0.8rem; font-weight:bold; margin-bottom:15px; height:15px;"></p>
-                <button class="btn" id="btn-login" type="button">Join Game</button>
-                <div style="margin-top:25px; padding:5px; font-size:12px; background-color:#f5f5f5; border-radius:6px;">
-                 If you are facing any error or forgotten your details then contact "unskyit@gmail.com".
-</div>
-            </div>
-            <div class="spacer"></div>
-        </div>
-    </div>
-
-    <div id="view-game" class="screen is-hidden">
+    <!-- MAIN GAME SCREEN -->
+    <div id="view-game" class="screen">
         <div class="scroll-area">
             <div class="hud">
                 <div class="pill">🍯 <span id="txt-score">0</span></div>
-                <div class="pill" id="btn-show-lb" style="color:var(--accent); cursor:pointer;">🏆 Ranking</div>
+                <div class="pill">⭐ Best: <span id="txt-best">0</span></div>
+                <div class="pill" id="btn-show-lb" style="color:var(--accent); cursor:pointer;">🕒 History</div>
             </div>
             <div class="spacer"></div>
             <div class="status" id="game-status">Ready?</div>
@@ -131,10 +79,12 @@
         </div>
     </div>
 
+    <!-- LOCAL LAST 10 MATCHES & HIGH SCORE SCREEN -->
     <div id="view-lb" class="screen is-hidden" style="background: #fffbf2;">
         <div class="lb-header">
             <button class="btn-close-x" id="btn-hide-lb-top" type="button">✕</button>
-            <h2 style="font-weight: 900; font-size: 1.8rem;">LEADERBOARD</h2>
+            <h2 style="font-weight: 900; font-size: 1.6rem;">LAST 10 MATCHES</h2>
+            <p id="lb-best-banner" style="font-weight: 800; font-size: 0.9rem; margin-top: 6px; opacity: 0.95;">All-Time Best: 0 🍯</p>
         </div>
         <div class="lb-scroll-container">
             <div class="lb-content" id="lb-list"></div>
@@ -142,27 +92,81 @@
     </div>
 
     <script>
-        const API_KEY = "AIzaSyC26LXwQc5EnEkRIjKQi4d2SzJRKNemGm4";
-        const AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts";
-        const DB_URL = "https://firestore.googleapis.com/v1/projects/teddy-shuffel/databases/(default)/documents";
+        var STORAGE_BEST = "teddy_local_best_v1";
+        var STORAGE_HIST = "teddy_local_history_v1";
 
-        const state = { score: 0, isPlaying: false, waiting: false, winId: 0, handle: "", uid: "", token: "", cups: [] };
-        const POSITIONS = ['10px', '115px', '220px']; 
+        var state = {
+            score: 0,
+            bestScore: 0,
+            history: [],
+            isPlaying: false,
+            waiting: false,
+            winId: 0,
+            cups: []
+        };
+        var POSITIONS = ['10px', '115px', '220px'];
 
-        // --- CALM AUDIO ENGINE (WebView-Safe) ---
-        let audioCtx = null;
+        // --- SAFE LOCAL STORAGE ---
+        function loadLocalData() {
+            try {
+                var savedBest = localStorage.getItem(STORAGE_BEST);
+                if (savedBest !== null) state.bestScore = parseInt(savedBest, 10) || 0;
+                var savedHist = localStorage.getItem(STORAGE_HIST);
+                if (savedHist) state.history = JSON.parse(savedHist) || [];
+            } catch (e) {}
+            document.getElementById('txt-best').innerText = state.bestScore;
+        }
+
+        function saveLocalData() {
+            try {
+                localStorage.setItem(STORAGE_BEST, String(state.bestScore));
+                localStorage.setItem(STORAGE_HIST, JSON.stringify(state.history));
+            } catch (e) {}
+        }
+
+        function formatDateTime(d) {
+            var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var day = d.getDate();
+            var mon = months[d.getMonth()];
+            var hr = d.getHours();
+            var min = d.getMinutes();
+            var ampm = hr >= 12 ? "PM" : "AM";
+            hr = hr % 12;
+            if (hr === 0) hr = 12;
+            var minStr = min < 10 ? "0" + min : String(min);
+            return day + " " + mon + ", " + hr + ":" + minStr + " " + ampm;
+        }
+
+        function recordMatch(finalScore) {
+            if (finalScore > state.bestScore) {
+                state.bestScore = finalScore;
+                document.getElementById('txt-best').innerText = state.bestScore;
+            }
+            var entry = {
+                score: finalScore,
+                time: formatDateTime(new Date())
+            };
+            state.history.unshift(entry);
+            if (state.history.length > 10) {
+                state.history = state.history.slice(0, 10);
+            }
+            saveLocalData();
+        }
+
+        // --- CALM AUDIO ENGINE ---
+        var audioCtx = null;
         function playTone(freq, duration, type, vol) {
             try {
                 type = type || 'sine';
                 vol = vol || 0.05;
                 if (!audioCtx) {
-                    const Ctx = window.AudioContext || window.webkitAudioContext;
+                    var Ctx = window.AudioContext || window.webkitAudioContext;
                     if (!Ctx) return;
                     audioCtx = new Ctx();
                 }
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
                 gain.gain.setValueAtTime(vol, audioCtx.currentTime);
@@ -174,160 +178,117 @@
             } catch (e) {}
         }
 
-        const sounds = {
+        var sounds = {
             click: function() { playTone(440, 0.15, 'sine', 0.04); },
             shuffle: function() { playTone(220, 0.08, 'triangle', 0.03); },
             win: function() { playTone(523, 0.3); setTimeout(function() { playTone(659, 0.4); }, 100); },
             fail: function() { playTone(110, 0.5, 'sawtooth', 0.04); }
         };
 
-        // --- FIRESTORE REST HELPER ---
-        function firestoreSet(path, obj, token) {
-            const fields = {};
-            for (const k in obj) {
-                if (typeof obj[k] === 'number') fields[k] = { integerValue: String(obj[k]) };
-                else fields[k] = { stringValue: String(obj[k]) };
+        // --- STATIC POOL OF 5 FALLING ITEMS (Zero Memory Leak) ---
+        function initBackground() {
+            var bg = document.getElementById('bg-canvas');
+            for (var i = 0; i < 5; i++) {
+                var el = document.createElement('div');
+                el.className = 'falling-item';
+                el.innerText = (i % 2 === 0) ? '🍯' : '🧸';
+                el.style.left = (12 + i * 19) + 'vw';
+                el.style.animationDuration = (4.5 + (i % 3) * 1.2) + 's';
+                el.style.animationDelay = (i * 1.1) + 's';
+                bg.appendChild(el);
             }
-            return fetch(DB_URL + "/" + path, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ fields: fields })
-            });
         }
 
-        // --- UI ---
-        document.getElementById('btn-toggle').onclick = function() {
-            sounds.click();
-            const inp = document.getElementById('inp-pwd');
-            inp.type = inp.type === 'password' ? 'text' : 'password';
-            document.getElementById('btn-toggle').innerText = inp.type === 'password' ? '👁️' : '🙈';
-        };
-
-        setInterval(function() {
-            const el = document.createElement('div');
-            el.className = 'falling-item';
-            el.innerText = Math.random() > 0.5 ? '🍯' : '🧸';
-            el.style.left = Math.random() * 95 + 'vw';
-            el.style.animationDuration = (Math.random() * 3 + 4) + 's';
-            document.getElementById('bg-canvas').appendChild(el);
-            setTimeout(function() { el.remove(); }, 7000);
-        }, 2000);
-
-        // --- AUTH ---
-        document.getElementById('btn-login').onclick = async function() {
-            sounds.click();
-            const h = document.getElementById('inp-handle').value.trim();
-            const p = document.getElementById('inp-pwd').value;
-            const msg = document.getElementById('login-msg');
-            const clean = h.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (!clean || !p) { msg.innerText = "Check details!"; return; }
-            msg.innerText = "Connecting...";
-            const email = clean + "@teddy.game";
-
-            try {
-                let res = await fetch(AUTH_URL + ":signInWithPassword?key=" + API_KEY, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email, password: p, returnSecureToken: true })
-                });
-                let data = await res.json();
-
-                if (!res.ok) {
-                    res = await fetch(AUTH_URL + ":signUp?key=" + API_KEY, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email, password: p, returnSecureToken: true })
-                    });
-                    data = await res.json();
-                    if (!res.ok) {
-                        msg.innerText = "Error or Name Taken.";
-                        return;
-                    }
-                    firestoreSet("users/" + data.localId, { handle: h, bestScore: 0 }, data.idToken).catch(function(){});
-                    firestoreSet("leaderboard/" + data.localId, { handle: h, score: 0 }, data.idToken).catch(function(){});
-                }
-
-                state.uid = data.localId;
-                state.token = data.idToken;
-                state.handle = h;
-                state.score = 0;
-
-                document.getElementById('view-login').classList.add('is-hidden');
-                document.getElementById('view-game').classList.remove('is-hidden');
-                initBoard();
-
-                fetch(DB_URL + "/users/" + state.uid, {
-                    headers: { 'Authorization': 'Bearer ' + state.token }
-                }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
-                    if (d && d.fields && d.fields.handle && d.fields.handle.stringValue) {
-                        state.handle = d.fields.handle.stringValue;
-                    }
-                }).catch(function(){});
-            } catch (err) {
-                msg.innerText = "Error or Name Taken.";
-            }
-        };
-
+        // --- GAME LOGIC ---
         function initBoard() {
-            const table = document.getElementById('table');
+            var table = document.getElementById('table');
             table.innerHTML = '<div class="honey" id="coin" style="opacity:0"></div>';
             state.cups = [];
-            for (let i = 0; i < 3; i++) {
-                const c = document.createElement('div');
+            for (var i = 0; i < 3; i++) {
+                var c = document.createElement('div');
                 c.className = 'pot';
                 c.style.left = POSITIONS[i];
                 c.innerHTML = '<div class="pot-body"><div class="pot-label">unskyit.com</div></div>';
                 state.cups.push({ id: i, posIndex: i, el: c });
-                c.onclick = (function(idx) { return function() { checkGuess(idx); }; })(i);
+                c.onclick = (function(idx) {
+                    return function() { checkGuess(idx); };
+                })(i);
                 table.appendChild(c);
             }
         }
 
-        document.getElementById('btn-action').onclick = async function() {
-            if (state.isPlaying) return;
+        function findCupById(id) {
+            for (var i = 0; i < state.cups.length; i++) {
+                if (state.cups[i].id === id) return state.cups[i];
+            }
+            return state.cups[0];
+        }
+
+        function findCupByPos(pos) {
+            for (var i = 0; i < state.cups.length; i++) {
+                if (state.cups[i].posIndex === pos) return state.cups[i];
+            }
+            return state.cups[0];
+        }
+
+        document.getElementById('btn-action').onclick = function() {
+            if (state.isPlaying || state.waiting) return;
             sounds.click();
             state.isPlaying = true;
             state.winId = Math.floor(Math.random() * 3);
-            const winCup = state.cups.find(function(c) { return c.id === state.winId; });
-            const coin = document.getElementById('coin');
-            const status = document.getElementById('game-status');
-            
+            var winCup = findCupById(state.winId);
+            var coin = document.getElementById('coin');
+            var status = document.getElementById('game-status');
+
             status.innerText = "Watch!";
             coin.style.left = "calc(" + POSITIONS[winCup.posIndex] + " + 24px)";
             coin.style.opacity = 1;
             winCup.el.classList.add('lifted');
-            await new Promise(function(r) { setTimeout(r, 1000); });
-            winCup.el.classList.remove('lifted');
-            coin.style.opacity = 0;
-            await new Promise(function(r) { setTimeout(r, 600); });
 
-            status.innerText = "Shuffling...";
-            let count = 6 + Math.min(state.score, 10);
-            for (let k = 0; k < count; k++) {
-                sounds.shuffle();
-                let p1 = Math.floor(Math.random() * 3), p2 = Math.floor(Math.random() * 3);
-                while (p1 === p2) p2 = Math.floor(Math.random() * 3);
-                let c1 = state.cups.find(function(c) { return c.posIndex === p1; });
-                let c2 = state.cups.find(function(c) { return c.posIndex === p2; });
-                c1.el.style.left = POSITIONS[p2]; c2.el.style.left = POSITIONS[p1];
-                c1.posIndex = p2; c2.posIndex = p1;
-                await new Promise(function(r) { setTimeout(r, 550 - Math.min(state.score * 15, 250)); });
-            }
-            status.innerText = "Where is it?";
-            state.isPlaying = false;
-            state.waiting = true;
+            setTimeout(function() {
+                winCup.el.classList.remove('lifted');
+                coin.style.opacity = 0;
+
+                setTimeout(function() {
+                    status.innerText = "Shuffling...";
+                    var count = 6 + Math.min(state.score, 10);
+                    var step = 0;
+                    var delay = 550 - Math.min(state.score * 15, 250);
+
+                    function doSwap() {
+                        if (step >= count) {
+                            status.innerText = "Where is it?";
+                            state.isPlaying = false;
+                            state.waiting = true;
+                            return;
+                        }
+                        sounds.shuffle();
+                        var p1 = Math.floor(Math.random() * 3);
+                        var p2 = Math.floor(Math.random() * 3);
+                        while (p1 === p2) p2 = Math.floor(Math.random() * 3);
+                        var c1 = findCupByPos(p1);
+                        var c2 = findCupByPos(p2);
+                        c1.el.style.left = POSITIONS[p2];
+                        c2.el.style.left = POSITIONS[p1];
+                        c1.posIndex = p2;
+                        c2.posIndex = p1;
+                        step++;
+                        setTimeout(doSwap, delay);
+                    }
+                    doSwap();
+                }, 600);
+            }, 1000);
         };
 
-        async function checkGuess(id) {
+        function checkGuess(id) {
             if (state.isPlaying || !state.waiting) return;
             state.waiting = false;
-            const coin = document.getElementById('coin');
-            const winCup = state.cups.find(function(c) { return c.id === state.winId; });
-            const clicked = state.cups.find(function(c) { return c.id === id; });
-            
+            state.isPlaying = true;
+
+            var coin = document.getElementById('coin');
+            var winCup = findCupById(state.winId);
+            var clicked = findCupById(id);
+
             coin.style.left = "calc(" + POSITIONS[winCup.posIndex] + " + 24px)";
             clicked.el.classList.add('lifted');
 
@@ -337,67 +298,74 @@
                 coin.style.opacity = 1;
                 state.score++;
                 document.getElementById('txt-score').innerText = state.score;
-                if (state.uid && state.token) {
-                    firestoreSet("leaderboard/" + state.uid, { handle: state.handle, score: state.score }, state.token).catch(function(){});
+
+                if (state.score > state.bestScore) {
+                    state.bestScore = state.score;
+                    document.getElementById('txt-best').innerText = state.bestScore;
+                    saveLocalData();
                 }
-                await new Promise(function(r) { setTimeout(r, 1200); });
-                clicked.el.classList.remove('lifted');
-                document.getElementById('btn-action').click();
+
+                setTimeout(function() {
+                    clicked.el.classList.remove('lifted');
+                    state.isPlaying = false;
+                    document.getElementById('btn-action').click();
+                }, 1200);
             } else {
                 sounds.fail();
                 document.getElementById('game-status').innerText = "Oops! 🐻";
-                await new Promise(function(r) { setTimeout(r, 800); });
-                winCup.el.classList.add('lifted');
-                coin.style.opacity = 1;
-                state.score = 0;
-                document.getElementById('txt-score').innerText = 0;
-                await new Promise(function(r) { setTimeout(r, 2000); });
-                initBoard();
-                document.getElementById('game-status').innerText = "Try Again?";
+                var endedScore = state.score;
+                recordMatch(endedScore);
+
+                setTimeout(function() {
+                    winCup.el.classList.add('lifted');
+                    coin.style.opacity = 1;
+                    state.score = 0;
+                    document.getElementById('txt-score').innerText = 0;
+
+                    setTimeout(function() {
+                        initBoard();
+                        state.isPlaying = false;
+                        document.getElementById('game-status').innerText = "Try Again?";
+                    }, 2000);
+                }, 800);
             }
         }
 
         function getTitle(s) {
-            if (s >= 50) return "<br><p style='font-size:11px;'>Legendary 🔥</p>";
-            if (s >= 25) return "<br><p style='font-size:11px;'>Elite ⚡</p>";
-            if (s >= 15) return "<br><p style='font-size:11px;'>Master 🏆</p>";
-            if (s >= 5) return "<br><p style='font-size:11px;'>Pro ⭐</p>"; 
-            return "<br><p style='font-size:11px;'>Rookie 🌱</p>";
+            if (s >= 50) return "<p style='font-size:11px; color:#8d6e63; margin-top:2px;'>Legendary 🔥</p>";
+            if (s >= 25) return "<p style='font-size:11px; color:#8d6e63; margin-top:2px;'>Elite ⚡</p>";
+            if (s >= 15) return "<p style='font-size:11px; color:#8d6e63; margin-top:2px;'>Master 🏆</p>";
+            if (s >= 5) return "<p style='font-size:11px; color:#8d6e63; margin-top:2px;'>Pro ⭐</p>";
+            return "<p style='font-size:11px; color:#8d6e63; margin-top:2px;'>Rookie 🌱</p>";
         }
 
-        document.getElementById('btn-show-lb').onclick = async function() {
+        // --- HISTORY VIEW ---
+        document.getElementById('btn-show-lb').onclick = function() {
             sounds.click();
             document.getElementById('view-game').classList.add('is-hidden');
             document.getElementById('view-lb').classList.remove('is-hidden');
-            const list = document.getElementById('lb-list');
-            list.innerHTML = "<p style='text-align:center; padding:20px;'>Syncing...</p>";
-            try {
-                const res = await fetch(DB_URL + ":runQuery", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        structuredQuery: {
-                            from: [{ collectionId: "leaderboard" }],
-                            orderBy: [{ field: { fieldPath: "score" }, direction: "DESCENDING" }],
-                            limit: 40
-                        }
-                    })
-                });
-                const rows = await res.json();
-                let html = ""; let i = 1;
-                if (Array.isArray(rows)) {
-                    rows.forEach(function(r) {
-                        if (!r.document || !r.document.fields) return;
-                        const f = r.document.fields;
-                        const handle = f.handle ? f.handle.stringValue : "Player";
-                        const score = f.score ? parseInt(f.score.integerValue || f.score.doubleValue || "0", 10) : 0;
-                        const rank = i === 1 ? '🥇' : i === 2 ? '🥈' : i === 3 ? '🥉' : i;
-                        html += '<div class="lb-row"><div class="rank-circle">' + rank + '</div><div class="player-box"><span class="player-name">' + handle + '</span><span class="player-title">' + getTitle(score) + '</span></div><div class="player-score">' + score + '</div></div>';
-                        i++;
-                    });
-                }
-                list.innerHTML = html || "Empty Arena.";
-            } catch (e) { list.innerHTML = "Sync Error."; }
+            document.getElementById('lb-best-banner').innerText = "All-Time Best: " + state.bestScore + " 🍯 (" + (state.bestScore >= 50 ? "Legendary" : state.bestScore >= 25 ? "Elite" : state.bestScore >= 15 ? "Master" : state.bestScore >= 5 ? "Pro" : "Rookie") + ")";
+
+            var list = document.getElementById('lb-list');
+            if (!state.history || state.history.length === 0) {
+                list.innerHTML = "<p style='text-align:center; padding:20px; font-weight:700; color:#8d6e63;'>No matches played yet.<br>Play a round to log your history!</p>";
+                return;
+            }
+
+            var html = "";
+            for (var i = 0; i < state.history.length; i++) {
+                var item = state.history[i];
+                var badge = (item.score === state.bestScore && item.score > 0) ? '🏆' : '#' + (i + 1);
+                html += '<div class="lb-row">' +
+                    '<div class="rank-circle">' + badge + '</div>' +
+                    '<div class="player-box">' +
+                        '<span class="player-name">' + item.time + '</span>' +
+                        getTitle(item.score) +
+                    '</div>' +
+                    '<div class="player-score">🍯 ' + item.score + '</div>' +
+                '</div>';
+            }
+            list.innerHTML = html;
         };
 
         document.getElementById('btn-hide-lb-top').onclick = function() {
@@ -405,6 +373,11 @@
             document.getElementById('view-lb').classList.add('is-hidden');
             document.getElementById('view-game').classList.remove('is-hidden');
         };
+
+        // --- INIT ---
+        loadLocalData();
+        initBackground();
+        initBoard();
     </script>
 </body>
 </html>
