@@ -49,9 +49,10 @@
         .inp {
             width: 100%; padding: 18px; border: 2px solid #f5f5f5; border-radius: 20px;
             background: #fafafa; color: var(--text-dark); font-size: 1rem; font-weight: 700; outline: none;
+            user-select: text; -webkit-user-select: text;
         }
         .inp:focus { border-color: var(--primary); background: #fff; }
-        .toggle-pwd { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; }
+        .toggle-pwd { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; padding: 5px; }
 
         .btn {
             width: 100%; padding: 18px; border: none; border-radius: 22px;
@@ -140,148 +141,180 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeAuth, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { initializeFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <script>
+        const API_KEY = "AIzaSyC26LXwQc5EnEkRIjKQi4d2SzJRKNemGm4";
+        const AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts";
+        const DB_URL = "https://firestore.googleapis.com/v1/projects/teddy-shuffel/databases/(default)/documents";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC26LXwQc5EnEkRIjKQi4d2SzJRKNemGm4",
-            authDomain: "teddy-shuffel.firebaseapp.com",
-            projectId: "teddy-shuffel",
-            storageBucket: "teddy-shuffel.firebasestorage.app",
-            messagingSenderId: "858055132182",
-            appId: "1:858055132182:web:92bad25ddcb8f852e2e137"
-        };
-        const app = initializeApp(firebaseConfig);
-        // Fixes MacroDroid WebView IndexedDB & WebChannel login freeze
-        const auth = initializeAuth(app, { persistence: inMemoryPersistence });
-        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
-
-        const state = { score: 0, isPlaying: false, winId: 0, handle: "", cups: [] };
+        const state = { score: 0, isPlaying: false, waiting: false, winId: 0, handle: "", uid: "", token: "", cups: [] };
         const POSITIONS = ['10px', '115px', '220px']; 
 
-        // --- CALM AUDIO ENGINE ---
+        // --- CALM AUDIO ENGINE (WebView-Safe) ---
         let audioCtx = null;
-        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-
-        function playTone(freq, duration, type = 'sine', vol = 0.05) {
-            initAudio();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+        function playTone(freq, duration, type, vol) {
+            try {
+                type = type || 'sine';
+                vol = vol || 0.05;
+                if (!audioCtx) {
+                    const Ctx = window.AudioContext || window.webkitAudioContext;
+                    if (!Ctx) return;
+                    audioCtx = new Ctx();
+                }
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
         }
 
         const sounds = {
-            click: () => playTone(440, 0.15, 'sine', 0.04),
-            shuffle: () => playTone(220, 0.08, 'triangle', 0.03),
-            win: () => { playTone(523, 0.3); setTimeout(() => playTone(659, 0.4), 100); },
-            fail: () => playTone(110, 0.5, 'sawtooth', 0.04)
+            click: function() { playTone(440, 0.15, 'sine', 0.04); },
+            shuffle: function() { playTone(220, 0.08, 'triangle', 0.03); },
+            win: function() { playTone(523, 0.3); setTimeout(function() { playTone(659, 0.4); }, 100); },
+            fail: function() { playTone(110, 0.5, 'sawtooth', 0.04); }
         };
 
+        // --- FIRESTORE REST HELPER ---
+        function firestoreSet(path, obj, token) {
+            const fields = {};
+            for (const k in obj) {
+                if (typeof obj[k] === 'number') fields[k] = { integerValue: String(obj[k]) };
+                else fields[k] = { stringValue: String(obj[k]) };
+            }
+            return fetch(DB_URL + "/" + path, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ fields: fields })
+            });
+        }
+
         // --- UI ---
-        document.getElementById('btn-toggle').onclick = () => {
+        document.getElementById('btn-toggle').onclick = function() {
             sounds.click();
             const inp = document.getElementById('inp-pwd');
             inp.type = inp.type === 'password' ? 'text' : 'password';
             document.getElementById('btn-toggle').innerText = inp.type === 'password' ? '👁️' : '🙈';
         };
 
-        setInterval(() => {
+        setInterval(function() {
             const el = document.createElement('div');
             el.className = 'falling-item';
             el.innerText = Math.random() > 0.5 ? '🍯' : '🧸';
             el.style.left = Math.random() * 95 + 'vw';
             el.style.animationDuration = (Math.random() * 3 + 4) + 's';
             document.getElementById('bg-canvas').appendChild(el);
-            setTimeout(() => el.remove(), 7000);
+            setTimeout(function() { el.remove(); }, 7000);
         }, 2000);
 
         // --- AUTH ---
-        document.getElementById('btn-login').onclick = async () => {
+        document.getElementById('btn-login').onclick = async function() {
             sounds.click();
             const h = document.getElementById('inp-handle').value.trim();
             const p = document.getElementById('inp-pwd').value;
             const msg = document.getElementById('login-msg');
-            if(!h || !p) { msg.innerText = "Check details!"; return; }
+            const clean = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!clean || !p) { msg.innerText = "Check details!"; return; }
             msg.innerText = "Connecting...";
-            state.handle = h;
-            const email = `${h.toLowerCase().replace(/[^a-z0-9]/g,'')}@teddy.game`;
-            try {
-                await signInWithEmailAndPassword(auth, email, p);
-            } catch(e) {
-                try {
-                    const c = await createUserWithEmailAndPassword(auth, email, p);
-                    setDoc(doc(db, "users", c.user.uid), { handle: h, bestScore: 0 }).catch(()=>{});
-                    setDoc(doc(db, "leaderboard", c.user.uid), { handle: h, score: 0 }).catch(()=>{});
-                } catch(err) { msg.innerText = "Error or Name Taken."; }
-            }
-        };
+            const email = clean + "@teddy.game";
 
-        onAuthStateChanged(auth, async (u) => {
-            if(u) {
+            try {
+                let res = await fetch(AUTH_URL + ":signInWithPassword?key=" + API_KEY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: p, returnSecureToken: true })
+                });
+                let data = await res.json();
+
+                if (!res.ok) {
+                    res = await fetch(AUTH_URL + ":signUp?key=" + API_KEY, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email, password: p, returnSecureToken: true })
+                    });
+                    data = await res.json();
+                    if (!res.ok) {
+                        msg.innerText = "Error or Name Taken.";
+                        return;
+                    }
+                    firestoreSet("users/" + data.localId, { handle: h, bestScore: 0 }, data.idToken).catch(function(){});
+                    firestoreSet("leaderboard/" + data.localId, { handle: h, score: 0 }, data.idToken).catch(function(){});
+                }
+
+                state.uid = data.localId;
+                state.token = data.idToken;
+                state.handle = h;
+                state.score = 0;
+
                 document.getElementById('view-login').classList.add('is-hidden');
                 document.getElementById('view-game').classList.remove('is-hidden');
-                state.score = 0;
                 initBoard();
-                try {
-                    const d = await getDoc(doc(db, "users", u.uid));
-                    if(d.exists()) { state.handle = d.data().handle; }
-                } catch(e) {}
+
+                fetch(DB_URL + "/users/" + state.uid, {
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
+                    if (d && d.fields && d.fields.handle && d.fields.handle.stringValue) {
+                        state.handle = d.fields.handle.stringValue;
+                    }
+                }).catch(function(){});
+            } catch (err) {
+                msg.innerText = "Error or Name Taken.";
             }
-        });
+        };
 
         function initBoard() {
             const table = document.getElementById('table');
             table.innerHTML = '<div class="honey" id="coin" style="opacity:0"></div>';
             state.cups = [];
-            for(let i=0; i<3; i++) {
+            for (let i = 0; i < 3; i++) {
                 const c = document.createElement('div');
                 c.className = 'pot';
                 c.style.left = POSITIONS[i];
-                c.innerHTML = `<div class="pot-body"><div class="pot-label">unskyit.com</div></div>`;
+                c.innerHTML = '<div class="pot-body"><div class="pot-label">unskyit.com</div></div>';
                 state.cups.push({ id: i, posIndex: i, el: c });
-                c.onclick = () => checkGuess(i);
+                c.onclick = (function(idx) { return function() { checkGuess(idx); }; })(i);
                 table.appendChild(c);
             }
         }
 
-        document.getElementById('btn-action').onclick = async () => {
-            if(state.isPlaying) return;
+        document.getElementById('btn-action').onclick = async function() {
+            if (state.isPlaying) return;
             sounds.click();
             state.isPlaying = true;
-            state.winId = Math.floor(Math.random()*3);
-            const winCup = state.cups.find(c => c.id === state.winId);
+            state.winId = Math.floor(Math.random() * 3);
+            const winCup = state.cups.find(function(c) { return c.id === state.winId; });
             const coin = document.getElementById('coin');
             const status = document.getElementById('game-status');
             
             status.innerText = "Watch!";
-            coin.style.left = `calc(${POSITIONS[winCup.posIndex]} + 24px)`;
+            coin.style.left = "calc(" + POSITIONS[winCup.posIndex] + " + 24px)";
             coin.style.opacity = 1;
             winCup.el.classList.add('lifted');
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(function(r) { setTimeout(r, 1000); });
             winCup.el.classList.remove('lifted');
             coin.style.opacity = 0;
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(function(r) { setTimeout(r, 600); });
 
             status.innerText = "Shuffling...";
             let count = 6 + Math.min(state.score, 10);
-            for(let k=0; k<count; k++) {
+            for (let k = 0; k < count; k++) {
                 sounds.shuffle();
-                let p1 = Math.floor(Math.random()*3), p2 = Math.floor(Math.random()*3);
-                while(p1===p2) p2 = Math.floor(Math.random()*3);
-                let c1 = state.cups.find(c => c.posIndex === p1), c2 = state.cups.find(c => c.posIndex === p2);
+                let p1 = Math.floor(Math.random() * 3), p2 = Math.floor(Math.random() * 3);
+                while (p1 === p2) p2 = Math.floor(Math.random() * 3);
+                let c1 = state.cups.find(function(c) { return c.posIndex === p1; });
+                let c2 = state.cups.find(function(c) { return c.posIndex === p2; });
                 c1.el.style.left = POSITIONS[p2]; c2.el.style.left = POSITIONS[p1];
                 c1.posIndex = p2; c2.posIndex = p1;
-                await new Promise(r => setTimeout(r, 550 - Math.min(state.score * 15, 250)));
+                await new Promise(function(r) { setTimeout(r, 550 - Math.min(state.score * 15, 250)); });
             }
             status.innerText = "Where is it?";
             state.isPlaying = false;
@@ -289,73 +322,89 @@
         };
 
         async function checkGuess(id) {
-            if(state.isPlaying || !state.waiting) return;
+            if (state.isPlaying || !state.waiting) return;
             state.waiting = false;
             const coin = document.getElementById('coin');
-            const winCup = state.cups.find(c => c.id === state.winId);
-            const clicked = state.cups.find(c => c.id === id);
+            const winCup = state.cups.find(function(c) { return c.id === state.winId; });
+            const clicked = state.cups.find(function(c) { return c.id === id; });
             
-            coin.style.left = `calc(${POSITIONS[winCup.posIndex]} + 24px)`;
+            coin.style.left = "calc(" + POSITIONS[winCup.posIndex] + " + 24px)";
             clicked.el.classList.add('lifted');
 
-            if(id === state.winId) {
+            if (id === state.winId) {
                 sounds.win();
                 document.getElementById('game-status').innerText = "Found! 🍯";
                 coin.style.opacity = 1;
                 state.score++;
                 document.getElementById('txt-score').innerText = state.score;
-                setDoc(doc(db, "leaderboard", auth.currentUser.uid), { handle: state.handle, score: state.score }, {merge: true}).catch(()=>{});
-                await new Promise(r => setTimeout(r, 1200));
+                if (state.uid && state.token) {
+                    firestoreSet("leaderboard/" + state.uid, { handle: state.handle, score: state.score }, state.token).catch(function(){});
+                }
+                await new Promise(function(r) { setTimeout(r, 1200); });
                 clicked.el.classList.remove('lifted');
                 document.getElementById('btn-action').click();
             } else {
                 sounds.fail();
                 document.getElementById('game-status').innerText = "Oops! 🐻";
-                await new Promise(r => setTimeout(r, 800));
+                await new Promise(function(r) { setTimeout(r, 800); });
                 winCup.el.classList.add('lifted');
                 coin.style.opacity = 1;
                 state.score = 0;
                 document.getElementById('txt-score').innerText = 0;
-                await new Promise(r => setTimeout(r, 2000));
+                await new Promise(function(r) { setTimeout(r, 2000); });
                 initBoard();
                 document.getElementById('game-status').innerText = "Try Again?";
             }
         }
 
         function getTitle(s) {
-            if(s >= 50) return "<br><p style='font-size:11px;'>Legendary 🔥</p>";
-            if(s >= 25) return "<br><p style='font-size:11px;'>Elite ⚡</p>";
-            if(s >= 15) return "<br><p style='font-size:11px;'>Master 🏆</p>";
-            if(s >= 5) return "<br><p style='font-size:11px;'>Pro ⭐</p>"; 
+            if (s >= 50) return "<br><p style='font-size:11px;'>Legendary 🔥</p>";
+            if (s >= 25) return "<br><p style='font-size:11px;'>Elite ⚡</p>";
+            if (s >= 15) return "<br><p style='font-size:11px;'>Master 🏆</p>";
+            if (s >= 5) return "<br><p style='font-size:11px;'>Pro ⭐</p>"; 
             return "<br><p style='font-size:11px;'>Rookie 🌱</p>";
         }
 
-        document.getElementById('btn-show-lb').onclick = async () => {
+        document.getElementById('btn-show-lb').onclick = async function() {
             sounds.click();
             document.getElementById('view-game').classList.add('is-hidden');
             document.getElementById('view-lb').classList.remove('is-hidden');
             const list = document.getElementById('lb-list');
             list.innerHTML = "<p style='text-align:center; padding:20px;'>Syncing...</p>";
             try {
-                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(40));
-                const snap = await getDocs(q);
-                let html = ""; let i = 1;
-                snap.forEach(d => {
-                    const v = d.data();
-                    const rank = i === 1 ? '🥇' : i === 2 ? '🥈' : i === 3 ? '🥉' : i;
-                    html += `<div class="lb-row"><div class="rank-circle">${rank}</div><div class="player-box"><span class="player-name">${v.handle}</span><span class="player-title">${getTitle(v.score)}</span></div><div class="player-score">${v.score}</div></div>`;
-                    i++;
+                const res = await fetch(DB_URL + ":runQuery", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        structuredQuery: {
+                            from: [{ collectionId: "leaderboard" }],
+                            orderBy: [{ field: { fieldPath: "score" }, direction: "DESCENDING" }],
+                            limit: 40
+                        }
+                    })
                 });
+                const rows = await res.json();
+                let html = ""; let i = 1;
+                if (Array.isArray(rows)) {
+                    rows.forEach(function(r) {
+                        if (!r.document || !r.document.fields) return;
+                        const f = r.document.fields;
+                        const handle = f.handle ? f.handle.stringValue : "Player";
+                        const score = f.score ? parseInt(f.score.integerValue || f.score.doubleValue || "0", 10) : 0;
+                        const rank = i === 1 ? '🥇' : i === 2 ? '🥈' : i === 3 ? '🥉' : i;
+                        html += '<div class="lb-row"><div class="rank-circle">' + rank + '</div><div class="player-box"><span class="player-name">' + handle + '</span><span class="player-title">' + getTitle(score) + '</span></div><div class="player-score">' + score + '</div></div>';
+                        i++;
+                    });
+                }
                 list.innerHTML = html || "Empty Arena.";
-            } catch(e) { list.innerHTML = "Sync Error."; }
+            } catch (e) { list.innerHTML = "Sync Error."; }
         };
 
-        document.getElementById('btn-hide-lb-top').onclick = () => {
+        document.getElementById('btn-hide-lb-top').onclick = function() {
             sounds.click();
             document.getElementById('view-lb').classList.add('is-hidden');
             document.getElementById('view-game').classList.remove('is-hidden');
         };
-
     </script>
 </body>
 </html>
